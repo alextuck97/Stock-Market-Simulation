@@ -1,6 +1,6 @@
 .explore-container{
     margin-top: 50px;
-    margin-left: 20px;
+    margin-left: 70px;
     margin-right: 0px;
 }
 
@@ -12,4 +12,19 @@
 .stock-menu-text{
     font-size: large;
     font-weight: 700;
+}
+
+
+.query-menu{
+    
+    padding-top: 10px;
+}
+
+.line-style{
+    color: red;
+    height: 5px;
+}
+
+hr {
+    color: black;
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import {Table, Container, Row, Col, Button, Form} from 'react-bootstrap';
 import './explore.css';
 
+const url = "http://127.0.0.1:8000/api/";
 
 class Explore extends React.Component {
     /**
@@ -16,7 +17,7 @@ class Explore extends React.Component {
 
         this.state = {
             clicked_stock : createStock("MSFT", 250, "-0.05", "+2.2", "+4.3"),
-            a : null
+            key : null,
         }
         
     }
@@ -33,7 +34,9 @@ class Explore extends React.Component {
             <Container className="explore-container" fluid>
                 <Row>
                     <Col id="stock-table-column" className="col-lg-8"><StockTable clickHandler={this.tableClickHandler.bind(this)}/></Col>
-                    <Col id="actions-column" className="stock-menu-container"><StocksMenu stock={this.state.clicked_stock}/></Col>
+                    <Col id="actions-column" className="stock-menu-container">
+                        <StocksMenu stock={this.state.clicked_stock} key={this.state.key}/>
+                    </Col>
                 </Row>
             </Container>
             
@@ -53,10 +56,38 @@ class StocksMenu extends React.Component {
 
         this.state = {
             display : null,
+            quantity_selected: null,
         }
 
     }
 
+
+    onBuyClick() {
+        let request = new XMLHttpRequest();
+
+        request.open("POST", url + "transaction/");
+        const body = {
+            "symbol": this.props.stock.symbol,
+            "quantity": this.state.quantity_selected
+        }
+        request.setRequestHeader("Content-Type", "application/json");
+        request.setRequestHeader("Authorization", "Token "+ this.props.key);
+        request.send(JSON.stringify(body));
+
+        request.onload = function() {
+            if(request.status !== 200){
+                alert(request.response);
+            }
+            else{
+                alert(request.response);
+            }
+        }
+    }
+
+    async quantityChangeHandler(event) {
+        await this.setState({quantity_selected: event.target.value});
+        //console.log(this.state.quantity_selected);
+    }
 
     populateOptions() {
         const a = Array(10).fill(0);
@@ -75,18 +106,32 @@ class StocksMenu extends React.Component {
                     <Form.Group className="stock-menu-text" as={Col}>{this.props.stock.symbol}</Form.Group>
                     <Form.Group as={Col}>{this.props.stock.price}</Form.Group>
                 </Form.Row>
-                <Form.Row>
+
+                <Form.Row id="buy-menu">
                     <Form.Group as={Col}>
-                        <Form.Control as="select">
+                        <Form.Control as="select" onChange={this.quantityChangeHandler.bind(this)}>
                             <option>---</option>
                             {this.populateOptions()}
                         </Form.Control>
                     </Form.Group>
                     <Form.Group as={Col}>
-                        <Button id="buy-button">Buy</Button>
+                        <Button id="buy-button" onClick={this.onBuyClick.bind(this)}>Buy</Button>
                     </Form.Group>
-                    
                 </Form.Row>
+
+                <Form.Row>
+                    <Col lg="8"><ColoredLine color="black" /></Col>
+                </Form.Row>
+                
+                <div id="query-menu">
+                    <Form.Row id="query-menu" className="query-menu">
+                        <Form.Label lg="2" column>Symbol:</Form.Label>
+                        <Col lg="6">
+                            <Form.Control column placeholder="MSFT" />
+                        </Col>
+                    </Form.Row>
+
+                </div>
                 
             </Form>
             
@@ -173,5 +218,14 @@ function createStock(symbol, price, day, month, year) {
     });
 }
 
+const ColoredLine = ({ color }) => (
+    <hr
+        style={{
+            color: color,
+            backgroundColor: color,
+            height: 1
+        }}
+    />
+);
 
 export default Explore;
