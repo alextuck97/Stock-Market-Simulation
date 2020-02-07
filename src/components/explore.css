@@ -1,4 +1,15 @@
 .explore-container{
     margin-top: 50px;
     margin-left: 20px;
+    margin-right: 0px;
+}
+
+.stock-menu-container{
+    padding-top: 15px;
+    margin-left: 50px;
+}
+
+.stock-menu-text{
+    font-size: large;
+    font-weight: 700;
 }

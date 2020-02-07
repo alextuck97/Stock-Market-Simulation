@@ -7,7 +7,7 @@ class Portfolio extends React.Component {
     render() {
         return(
             <div>
-                Display the user's protfolio here
+                Display the user's portfolio here
             </div>
         )
     }
