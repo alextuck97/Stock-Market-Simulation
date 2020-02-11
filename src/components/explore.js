@@ -1,5 +1,5 @@
 import React from 'react';
-import {Table, Container, Row, Col, Button, Form} from 'react-bootstrap';
+import {Table, Container, Row, Col, Button, Form, Alert} from 'react-bootstrap';
 import './explore.css';
 
 const url = "http://127.0.0.1:8000/api/";
@@ -32,9 +32,9 @@ class Explore extends React.Component {
     render () {
         return (
             <Container className="explore-container" fluid>
-                <Row>
-                    <Col id="stock-table-column" className="col-lg-8"><StockTable clickHandler={this.tableClickHandler.bind(this)}/></Col>
-                    <Col id="actions-column" className="stock-menu-container">
+                <Row className="explore-row" fluid>
+                    <Col id="stock-table-column" className="col-lg- stock-table-column"><StockTable clickHandler={this.tableClickHandler.bind(this)}/></Col>
+                    <Col id="actions-column" className="stock-menu-container col-lg-3">
                         <StocksMenu stock={this.state.clicked_stock} key={this.state.key}/>
                     </Col>
                 </Row>
@@ -57,12 +57,25 @@ class StocksMenu extends React.Component {
         this.state = {
             display : null,
             quantity_selected: null,
+            showSuccessAlert : false,
         }
+
+        this.sendWatchRequest = this.sendWatchRequest.bind(this);
+        this.setShowSuccessFalse = this.setShowSuccessFalse.bind(this);
 
     }
 
 
-    onBuyClick() {
+    onWatchClick() {
+        this.sendWatchRequest();
+        this.startAlertTimer();
+    }
+
+
+    sendWatchRequest() {
+        /* 
+        Send the request to watch the stock to ther server
+        */
         let request = new XMLHttpRequest();
 
         request.open("POST", url + "transaction/");
@@ -73,15 +86,29 @@ class StocksMenu extends React.Component {
         request.setRequestHeader("Content-Type", "application/json");
         request.setRequestHeader("Authorization", "Token "+ this.props.key);
         request.send(JSON.stringify(body));
-
+        this.setState({showSuccessAlert : true});
         request.onload = function() {
             if(request.status !== 200){
                 alert(request.response);
+                this.setState({showSuccessAlert : true});
             }
             else{
                 alert(request.response);
+                this.setState({showSuccessAlert : true});
             }
         }
+    }
+
+
+    startAlertTimer(){
+        window.setTimeout(
+            this.setShowSuccessFalse, 2000
+        );
+
+    }
+
+    setShowSuccessFalse(){
+        this.setState({showSuccessAlert : false})
     }
 
     async quantityChangeHandler(event) {
@@ -89,13 +116,9 @@ class StocksMenu extends React.Component {
         //console.log(this.state.quantity_selected);
     }
 
-    populateOptions() {
-        const a = Array(10).fill(0);
-        return a.map((i, index) => {
-            return(
-                <option>{index + 1}</option>
-            )
-        })
+
+    onToastClose(){
+        this.setState({showSuccessAlert : false});
     }
 
 
@@ -107,32 +130,30 @@ class StocksMenu extends React.Component {
                     <Form.Group as={Col}>{this.props.stock.price}</Form.Group>
                 </Form.Row>
 
-                <Form.Row id="buy-menu">
-                    <Form.Group as={Col}>
-                        <Form.Control as="select" onChange={this.quantityChangeHandler.bind(this)}>
-                            <option>---</option>
-                            {this.populateOptions()}
-                        </Form.Control>
-                    </Form.Group>
-                    <Form.Group as={Col}>
-                        <Button id="buy-button" onClick={this.onBuyClick.bind(this)}>Buy</Button>
+                <Form.Row id="watch-menu">
+                    <Form.Group as={Col} className="col-lg-9">
+                        <Button id="watch-button" block onClick={this.onWatchClick.bind(this)}>Watch</Button>
                     </Form.Group>
                 </Form.Row>
 
                 <Form.Row>
-                    <Col lg="8"><ColoredLine color="black" /></Col>
+                    <Col lg="9"><ColoredLine color="black" /></Col>
                 </Form.Row>
                 
                 <div id="query-menu">
                     <Form.Row id="query-menu" className="query-menu">
-                        <Form.Label lg="2" column>Symbol:</Form.Label>
-                        <Col lg="6">
+                        <Form.Label lg="3" column>Symbol:</Form.Label>
+                        <Col lg="4">
                             <Form.Control column placeholder="MSFT" />
                         </Col>
                     </Form.Row>
 
                 </div>
-                
+                <Form.Row id="toast-row">
+                    <Alert variant="primary" onClose={this.onToastClose.bind(this)} show={this.state.showSuccessAlert} delay={3000} dismissible>
+                        <p>This is a toast</p>
+                    </Alert>
+                </Form.Row>
             </Form>
             
           

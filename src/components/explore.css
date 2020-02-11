@@ -1,12 +1,21 @@
 .explore-container{
     margin-top: 50px;
-    margin-left: 70px;
-    margin-right: 0px;
+    padding-left: 100px;
+   
+}
+
+.explore-row{
+    height: 80vh;
 }
 
 .stock-menu-container{
     padding-top: 15px;
-    margin-left: 50px;
+    padding-left: 50px;
+}
+
+.stock-table-column{
+    overflow-y: scroll;
+    height: 100%;
 }
 
 .stock-menu-text{
