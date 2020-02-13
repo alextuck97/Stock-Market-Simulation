@@ -58,15 +58,17 @@ class StocksMenu extends React.Component {
             display : null,
             quantity_selected: null,
             showSuccessAlert : false,
+            stock_on_watch_click : null,
         }
 
         this.sendWatchRequest = this.sendWatchRequest.bind(this);
         this.setShowSuccessFalse = this.setShowSuccessFalse.bind(this);
-
+        this.alert_timeout = null;
     }
 
 
-    onWatchClick() {
+    async onWatchClick() {
+        await this.setState({stock_on_watch_click : this.props.stock.symbol})
         this.sendWatchRequest();
         this.startAlertTimer();
     }
@@ -101,10 +103,13 @@ class StocksMenu extends React.Component {
 
 
     startAlertTimer(){
-        window.setTimeout(
+        if(this.state.showSuccessAlert){
+            clearTimeout(this.alert_timeout);
+        }
+
+        this.alert_timeout = window.setTimeout(
             this.setShowSuccessFalse, 2000
         );
-
     }
 
     setShowSuccessFalse(){
@@ -149,14 +154,26 @@ class StocksMenu extends React.Component {
                     </Form.Row>
 
                 </div>
-                <Form.Row id="toast-row">
-                    <Alert variant="primary" onClose={this.onToastClose.bind(this)} show={this.state.showSuccessAlert} delay={3000} dismissible>
-                        <p>This is a toast</p>
-                    </Alert>
+                <Form.Row id="alert-row">
+                    {this.state.showSuccessAlert ? <WatchAlert symbol={this.state.stock_on_watch_click}/> : null}
                 </Form.Row>
             </Form>
             
           
+        )
+    }
+}
+
+
+class WatchAlert extends React.Component {
+    /**
+     * The alert displayed when a user watches a stock
+     */
+    render () {
+        return (
+            <Alert variant="primary" dismissible>
+                <p>{this.props.symbol} added to watch list</p>
+            </Alert>
         )
     }
 }

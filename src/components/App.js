@@ -6,6 +6,7 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 import {Route, NavLink, Switch} from 'react-router-dom';
 import Portfolio from './portfolio.js';
 import Explore from './explore.js';
+import Login from './login.js';
 
 const links = {
     explore : '/explore',
@@ -68,6 +69,19 @@ class Navigation extends React.Component {
     
 }
 
+class LoggedInView extends React.Component {
+    render(){
+        return(
+            <>
+                <Navigation user={this.props.user}/>
+                <Switch>
+                    <Route path={links.portfolio} component={Portfolio} />
+                    <Route path={links.explore} component={Explore} />
+                </Switch>
+            </>
+        )
+    }
+}
 
 class App extends React.Component {
     constructor(props){
@@ -81,13 +95,7 @@ class App extends React.Component {
 
     render() {
         return(
-            <>
-                <Navigation user={this.state.user}/>
-                <Switch>
-                    <Route path={links.portfolio} component={Portfolio} />
-                    <Route path={links.explore} component={Explore} />
-                </Switch>
-            </>
+            <>{this.state.key ? <LoggedInView user={this.state.user} />: <Login />}</>
         )
     }
 }
