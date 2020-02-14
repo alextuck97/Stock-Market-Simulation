@@ -5,6 +5,8 @@ import Portfolio from "./components/portfolio.js";
 import LoginPage from "./components/login.js";
 import SignupPage from "./components/signup.js";
 
+const api_url = "http://127.0.0.1:8000/api/";
+
 const links = {
     explore : '/explore',
     portfolio : '/portfolio',
@@ -12,6 +14,7 @@ const links = {
     signup : '/signup'
 }
 
+// Use the getCurrentUser route to verify this
 const isAuthorized = true;
 
 //Add signup route
@@ -40,6 +43,33 @@ class Router extends React.Component {
 }
 
 
+function checkAuthorization(token){
+    /**
+     * Ping the server with the user's token.
+     * The server will tell if it is valid or not.
+     */
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", api_url + "whoisthis/");
+
+    xhr.setRequestHeader("Authorization", "JWT " + token);
+    xhr.send();
+
+    xhr.onload = () => {
+        let response = JSON.parse(xhr.response);
+        if(xhr.status === 401){
+            //unauthorized
+        }
+        else if(xhr.status === 200){
+            //authorized
+            // set state somewhere?
+        }
+        else{
+            alert(response);
+        }
+    }
+}
+
+
 const PrivateRoute = ({component: Component, }) =>(
 
     <Route render={props => isAuthorized ? (<Component {...props}/>) : 
@@ -48,4 +78,4 @@ const PrivateRoute = ({component: Component, }) =>(
 
 );
 
-export {links, Router};
+export {links, Router, api_url};

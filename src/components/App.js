@@ -27,7 +27,7 @@ class AccountMenu extends React.Component {
                     <NavDropdown.Item>Option1</NavDropdown.Item>
                     <NavDropdown.Item>Option2</NavDropdown.Item>
                     <NavDropdown.Divider />
-                    <NavDropdown.Item>Sign Out</NavDropdown.Item>
+                    <NavDropdown.Item onClick={this.props.removeCurrentUser}>Sign Out</NavDropdown.Item>
                 </NavDropdown>
                 <img src={this.state.imagesrc} width="40" height="40"/>
             </Nav>
@@ -58,7 +58,12 @@ class Navigation extends React.Component {
                             {this.props.linksDisabled ? null : 
                             <NavLink className="nav-link" to={links.explore}>Explore</NavLink>}
                         </Nav>
-                        {this.props.linksDisabled ? null :<AccountMenu user={this.props.user} imagesrc={"./logo192.png"}/>}
+                        {this.props.linksDisabled ? null :
+                            <AccountMenu user={this.props.user} 
+                                removeCurrentUser={this.props.removeCurrentUser} 
+                                imagesrc={"./logo192.png"}
+                            />
+                        }
                     </Navbar.Collapse>
                     
                 </Navbar>
@@ -81,21 +86,31 @@ class App extends React.Component {
 
         this.loginHandler = this.loginHandler.bind(this);
         this.storeCurrentUser = this.storeCurrentUser.bind(this);
+        this.removeCurrentUser = this.removeCurrentUser.bind(this);
     }
 
     storeCurrentUser(user, key){
-        this.setState({user:user, key:key});
+        this.setState({user:user, key:key, linksDisabled: false});
+    }
+
+    removeCurrentUser(){
+        this.setState({user : null, key : null, linksDisabled : true});
+        this.props.history.push(links.login);
     }
 
     loginHandler(event){
         event.preventDefault();
-        this.setState({linksDisabled : false});
+        
     }
 
     render() {
         return(
             <>
-            <Navigation user={this.state.user} key={this.props.key} linksDisabled={this.state.linksDisabled}/>
+            <Navigation user={this.state.user} 
+                key={this.props.key} 
+                removeCurrentUser={this.removeCurrentUser} 
+                linksDisabled={this.state.linksDisabled}
+            />
             <Router storeCurrentUser={this.storeCurrentUser}/>
             </>
         )

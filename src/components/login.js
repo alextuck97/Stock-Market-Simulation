@@ -1,7 +1,8 @@
 import React from 'react';
 import {Form, Button, Container, Row, Col} from 'react-bootstrap';
 import {NavLink} from 'react-router-dom';
-import {links} from '../router.js';
+import {links, api_url} from '../router.js';
+import {Redirect} from "react-router-dom";
 import "./authenticationforms.css";
 
 
@@ -24,7 +25,34 @@ class LoginPage extends React.Component {
         event.preventDefault();
         const user = event.target.elements.username.value;
         const password = event.target.elements.password.value;
-        this.props.storeCurrentUser(null, null);
+        
+        event.target.elements.username.value = null;
+        event.target.elements.password.value = null;
+
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", api_url + "token-auth/")
+        const body = {
+            "username" : user,
+            "password" : password
+        }
+
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify(body));
+
+        xhr.onload = () => {
+            if(xhr.status === 400){
+                alert("Wrong username or password");
+            }
+            else if(xhr.status === 200){
+                let response = JSON.parse(xhr.response);
+                this.props.storeCurrentUser(response.user.username, response.key);
+                //alert(response.user.username);
+                this.props.history.push(links.explore);
+            }
+            else{
+                alert("Something went wrong");
+            }
+        }
     }
 
     render() {
@@ -42,7 +70,7 @@ class LoginPage extends React.Component {
                     <Form.Group as={Row}>
                         <Form.Label column sm={2}>Password:</Form.Label>
                         <Col sm={10}>
-                            <Form.Control name="password" required type="text" placeholder="example@example.com"/>
+                            <Form.Control name="password" type="password" required placeholder="Password"/>
                         </Col>
                         
                     </Form.Group>
