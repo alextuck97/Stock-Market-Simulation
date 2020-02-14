@@ -25,12 +25,12 @@ class Router extends React.Component {
                 <Route 
                     path={links.signup} 
                     render={(props) => <SignupPage {...props} 
-                    signupHandler={this.props.signupHandler} />}
+                    storeCurrentUser={this.props.storeCurrentUser} />}
                 />
                 <Route 
                     path={links.login} 
                     render={(props) => <LoginPage {...props} 
-                    loginHandler={this.props.loginHandler}/>}
+                    storeCurrentUser={this.props.storeCurrentUser}/>}
                 />
                 
             </Switch>

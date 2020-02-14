@@ -10,22 +10,36 @@ class SignupPage extends React.Component {
         console.log("dummy submit");
     }
 
+    constructor(props){
+        super(props);
+
+        this.signupHandler = this.signupHandler.bind(this);
+    }
+
+    signupHandler(event){
+        event.preventDefault();
+        const user = event.target.elements.username.value;
+        const password = event.target.elements.password.value;
+        
+        this.props.storeCurrentUser(null, null);
+    }
+
     render() {
         return(
             <Container className="login-styling">
                 <h3>Create account</h3>
-                <Form className="justify-content-center">
+                <Form className="justify-content-center" onSubmit={this.signupHandler}>
                     <Form.Group as={Row}>
                         <Form.Label column sm={2}>Username:</Form.Label>
                         <Col sm={10}>
-                            <Form.Control required type="text" placeholder="Username"/>
+                            <Form.Control name="username" required type="text" placeholder="Username"/>
                         </Col>
                         
                     </Form.Group>
                     <Form.Group as={Row}>
                         <Form.Label id="password1" column sm={2}>Password:</Form.Label>
                         <Col sm={10}>
-                            <Form.Control required type="text" placeholder="example@example.com"/>
+                            <Form.Control name="password1" required type="text" placeholder="example@example.com"/>
                         </Col>
                         
                     </Form.Group>
@@ -33,14 +47,14 @@ class SignupPage extends React.Component {
                     <Form.Group as={Row}>
                         <Form.Label id="password2" column sm={2}>Password:</Form.Label>
                         <Col sm={10}>
-                            <Form.Control required type="text" placeholder="example@example.com"/>
+                            <Form.Control name="password2" required type="text" placeholder="example@example.com"/>
                         </Col>
                         
                     </Form.Group>
                 
                     <Form.Group as={Row} className="submission-styling">
                         <Col lg={2}>
-                            <Button className="justify-content-center" onClick={this.dummySubmit}>Submit</Button>
+                            <Button className="justify-content-center" type="submit">Submit</Button>
                         </Col>
                         
                         <Col>

@@ -80,6 +80,11 @@ class App extends React.Component {
         }
 
         this.loginHandler = this.loginHandler.bind(this);
+        this.storeCurrentUser = this.storeCurrentUser.bind(this);
+    }
+
+    storeCurrentUser(user, key){
+        this.setState({user:user, key:key});
     }
 
     loginHandler(event){
@@ -91,7 +96,7 @@ class App extends React.Component {
         return(
             <>
             <Navigation user={this.state.user} key={this.props.key} linksDisabled={this.state.linksDisabled}/>
-            <Router loginHandler={this.loginHandler}/>
+            <Router storeCurrentUser={this.storeCurrentUser}/>
             </>
         )
     }
