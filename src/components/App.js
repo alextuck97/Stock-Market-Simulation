@@ -6,12 +6,9 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 import {Route, NavLink, Switch} from 'react-router-dom';
 import Portfolio from './portfolio.js';
 import Explore from './explore.js';
-import Login from './login.js';
+import LoginPage from './login.js';
+import {links, Router} from "../router.js";
 
-const links = {
-    explore : '/explore',
-    portfolio : '/portfolio'
-}
 
 
 class AccountMenu extends React.Component {
@@ -44,7 +41,7 @@ class Navigation extends React.Component {
         super(props);
 
         this.state = {
-
+            linksDisabled : true,
         }
     }
 
@@ -56,10 +53,12 @@ class Navigation extends React.Component {
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="mr-auto">
-                            <NavLink className="nav-link" to={links.portfolio}>Portfolio</NavLink>
-                            <NavLink className="nav-link" to={links.explore}>Explore</NavLink>
+                            {this.props.linksDisabled ? null : 
+                            <NavLink className="nav-link" to={links.portfolio}>Portfolio</NavLink>}
+                            {this.props.linksDisabled ? null : 
+                            <NavLink className="nav-link" to={links.explore}>Explore</NavLink>}
                         </Nav>
-                        <AccountMenu user={this.props.user} imagesrc={"./logo192.png"}/>
+                        {this.props.linksDisabled ? null :<AccountMenu user={this.props.user} imagesrc={"./logo192.png"}/>}
                     </Navbar.Collapse>
                     
                 </Navbar>
@@ -69,19 +68,6 @@ class Navigation extends React.Component {
     
 }
 
-class LoggedInView extends React.Component {
-    render(){
-        return(
-            <>
-                <Navigation user={this.props.user}/>
-                <Switch>
-                    <Route path={links.portfolio} component={Portfolio} />
-                    <Route path={links.explore} component={Explore} />
-                </Switch>
-            </>
-        )
-    }
-}
 
 class App extends React.Component {
     constructor(props){
@@ -89,13 +75,24 @@ class App extends React.Component {
 
         this.state = {
             key : null,
-            user : "test-user"
+            user : "test-user",
+            linksDisabled : true,
         }
+
+        this.loginHandler = this.loginHandler.bind(this);
+    }
+
+    loginHandler(event){
+        event.preventDefault();
+        this.setState({linksDisabled : false});
     }
 
     render() {
         return(
-            <>{this.state.key ? <LoggedInView user={this.state.user} />: <Login />}</>
+            <>
+            <Navigation user={this.state.user} key={this.props.key} linksDisabled={this.state.linksDisabled}/>
+            <Router loginHandler={this.loginHandler}/>
+            </>
         )
     }
 }

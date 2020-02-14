@@ -1,0 +1,29 @@
+.login-styling {
+    margin-top: 20px;
+    padding-top: 20px;
+    padding-bottom: 5px;
+    width: 40%;
+    border: 1mm ridge lightgray;
+}
+
+
+.submission-styling {
+    padding-top: 10px;
+}
+
+.sign-up{
+    padding-left: 0px;
+    
+}
+
+
+
+.sign-up:hover{
+    text-decoration: underline;
+}
+
+
+
+.have-account{
+    padding-top: 5px;
+}
