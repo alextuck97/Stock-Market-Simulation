@@ -7,7 +7,7 @@ import {Route, NavLink, Switch} from 'react-router-dom';
 import Portfolio from './portfolio.js';
 import Explore from './explore.js';
 import LoginPage from './login.js';
-import {links, Router} from "../router.js";
+import {links, Router, api_url} from "../router.js";
 
 
 
@@ -81,26 +81,52 @@ class App extends React.Component {
         this.state = {
             key : null,
             user : "test-user",
+            authorized : false,
             linksDisabled : true,
         }
 
-        this.loginHandler = this.loginHandler.bind(this);
         this.storeCurrentUser = this.storeCurrentUser.bind(this);
         this.removeCurrentUser = this.removeCurrentUser.bind(this);
+        this.checkAuthorization = this.checkAuthorization.bind(this);
     }
 
+    //componentDidMount(){
+    //    if(!this.state.authorized)
+    //        this.checkAuthorization(this.state.key);
+    //}
+
     storeCurrentUser(user, key){
-        this.setState({user:user, key:key, linksDisabled: false});
+        this.setState({user:user, key:key, linksDisabled: false, authorized : true});
     }
 
     removeCurrentUser(){
-        this.setState({user : null, key : null, linksDisabled : true});
+        this.setState({user : null, key : null, linksDisabled : true, authorized : false});
         this.props.history.push(links.login);
     }
 
-    loginHandler(event){
-        event.preventDefault();
-        
+    checkAuthorization(token) {
+        /**
+         * Checks the user's authorization. If th
+         */
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", api_url + "whoisthis/");
+    
+        xhr.setRequestHeader("Authorization", "JWT " + token);
+        xhr.send();
+    
+        xhr.onload = () => {
+            let response = JSON.parse(xhr.response);
+            if(xhr.status === 401){
+                this.setState({authorized : false});
+            }
+            else if(xhr.status === 200){
+                this.setState({authorized : true});
+            }
+            else{
+                this.setState({authorized : false});
+                alert(response);
+            }
+        }
     }
 
     render() {
@@ -111,7 +137,11 @@ class App extends React.Component {
                 removeCurrentUser={this.removeCurrentUser} 
                 linksDisabled={this.state.linksDisabled}
             />
-            <Router storeCurrentUser={this.storeCurrentUser}/>
+            <Router storeCurrentUser={this.storeCurrentUser} 
+                checkAuthorization={this.checkAuthorization} 
+                authorized={this.state.authorized}
+                key={this.state.key}
+            />
             </>
         )
     }

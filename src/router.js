@@ -21,10 +21,13 @@ const isAuthorized = true;
 class Router extends React.Component {
 
     render() {
+ 
         return(
+            
             <Switch>
-                <PrivateRoute path={links.explore} component={Explore}/>
-                <PrivateRoute path={links.portfolio} component={Portfolio}/>
+                
+                <PrivateRoute path={links.explore} component={Explore} authorized={this.props.authorized}/>
+                <PrivateRoute path={links.portfolio} component={Portfolio} authorized={this.props.authorized}/>
                 <Route 
                     path={links.signup} 
                     render={(props) => <SignupPage {...props} 
@@ -43,37 +46,14 @@ class Router extends React.Component {
 }
 
 
-function checkAuthorization(token){
-    /**
-     * Ping the server with the user's token.
-     * The server will tell if it is valid or not.
-     */
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", api_url + "whoisthis/");
 
-    xhr.setRequestHeader("Authorization", "JWT " + token);
-    xhr.send();
+const PrivateRoute = ({component: Component, authorized : authorized}) =>(
 
-    xhr.onload = () => {
-        let response = JSON.parse(xhr.response);
-        if(xhr.status === 401){
-            //unauthorized
+    <Route render={props => 
+
+            authorized ? (<Component {...props}/>) : (<Redirect to={{pathname : "/"}}/>)
         }
-        else if(xhr.status === 200){
-            //authorized
-            // set state somewhere?
-        }
-        else{
-            alert(response);
-        }
-    }
-}
-
-
-const PrivateRoute = ({component: Component, }) =>(
-
-    <Route render={props => isAuthorized ? (<Component {...props}/>) : 
-        (<Redirect to={{pathname : "/"}}/>)}
+    
     />
 
 );
