@@ -59,6 +59,7 @@ class StocksMenu extends React.Component {
             quantity_selected: null,
             showSuccessAlert : false,
             stock_on_watch_click : null,
+            watch_success : false,
         }
 
         this.sendWatchRequest = this.sendWatchRequest.bind(this);
@@ -80,25 +81,28 @@ class StocksMenu extends React.Component {
         */
         let request = new XMLHttpRequest();
 
-        request.open("POST", url + "transaction/");
+        request.open("POST", url + "watch/");
         const body = {
             "symbol": this.props.stock.symbol,
-            "quantity": this.state.quantity_selected
+            //"quantity": this.state.quantity_selected
         }
         request.setRequestHeader("Content-Type", "application/json");
-        request.setRequestHeader("Authorization", "Token "+ this.props.key);
+        request.setRequestHeader("Authorization", "JWT "+ window.sessionStorage.getItem("token"));
         request.send(JSON.stringify(body));
-        this.setState({showSuccessAlert : true});
+        
         request.onload = function() {
-            if(request.status !== 200){
-                alert(request.response);
-                this.setState({showSuccessAlert : true});
+            
+            let response = JSON.parse(request.response);
+            if(request.status === 200){
+                //alert(request.response); 
+                let watch_success = response.alert === "success"; 
+                this.setState({showSuccessAlert : true, watch_success : watch_success});
             }
             else{
                 alert(request.response);
-                this.setState({showSuccessAlert : true});
+                //this.setState({showSuccessAlert : true});
             }
-        }
+        }.bind(this);
     }
 
 
@@ -155,7 +159,11 @@ class StocksMenu extends React.Component {
 
                 </div>
                 <Form.Row id="alert-row">
-                    {this.state.showSuccessAlert ? <WatchAlert symbol={this.state.stock_on_watch_click}/> : null}
+                    {
+                        this.state.showSuccessAlert ? 
+                        <WatchAlert symbol={this.state.stock_on_watch_click} success={this.state.watch_success}/> : 
+                        null
+                    }
                 </Form.Row>
             </Form>
             
@@ -170,9 +178,11 @@ class WatchAlert extends React.Component {
      * The alert displayed when a user watches a stock
      */
     render () {
+        let variant = this.props.success ? "primary" : "danger";
+        let text = this.props.success ? " added to watch list" : " already watched";
         return (
-            <Alert variant="primary" dismissible>
-                <p>{this.props.symbol} added to watch list</p>
+            <Alert variant={variant} dismissible>
+                <p>{this.props.symbol + text}</p>
             </Alert>
         )
     }

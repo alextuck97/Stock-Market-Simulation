@@ -30,14 +30,17 @@ class Router extends React.Component {
                 <PrivateRoute path={links.portfolio} component={Portfolio} authorized={this.props.authorized}/>
                 <Route 
                     path={links.signup} 
-                    render={(props) => <SignupPage {...props} 
-                    storeCurrentUser={this.props.storeCurrentUser} />}
+                    render={(props) => this.props.authorized ? 
+                        <Redirect to={links.explore}/> : 
+                        <SignupPage {...props} storeCurrentUser={this.props.storeCurrentUser} />}
                 />
                 <Route 
                     path={links.login} 
-                    render={(props) => <LoginPage {...props} 
-                    storeCurrentUser={this.props.storeCurrentUser}/>}
+                    render={(props) => this.props.authorized ? 
+                        <Redirect to={links.explore}/> : 
+                        <LoginPage {...props} storeCurrentUser={this.props.storeCurrentUser}/>}
                 />
+            
                 
             </Switch>
         )
@@ -45,12 +48,17 @@ class Router extends React.Component {
     
 }
 
+// For login and signup that should not be accessed by an authenticated user
+const PublicOnlyRoute = ({component : Component, authorized : authorized, redirect : redirect}) => (
+    <Route render={props =>
+        authorized ? (<Redirect to={{pathname : redirect}}/>) : (<Component {...props}/>)
+    }
+    />
+);
 
 
 const PrivateRoute = ({component: Component, authorized : authorized}) =>(
-
     <Route render={props => 
-
             authorized ? (<Component {...props}/>) : (<Redirect to={{pathname : "/"}}/>)
         }
     

@@ -45,7 +45,7 @@ class LoginPage extends React.Component {
             }
             else if(xhr.status === 200){
                 let response = JSON.parse(xhr.response);
-                this.props.storeCurrentUser(response.user.username, response.key);
+                this.props.storeCurrentUser(response.user.username, response.token);
                 //alert(response.user.username);
                 this.props.history.push(links.explore);
             }

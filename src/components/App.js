@@ -79,7 +79,6 @@ class App extends React.Component {
         super(props);
 
         this.state = {
-            key : null,
             user : "test-user",
             authorized : false,
             linksDisabled : true,
@@ -90,17 +89,19 @@ class App extends React.Component {
         this.checkAuthorization = this.checkAuthorization.bind(this);
     }
 
-    //componentDidMount(){
-    //    if(!this.state.authorized)
-    //        this.checkAuthorization(this.state.key);
-    //}
+    componentDidMount(){
+        if(!this.state.authorized)
+            this.checkAuthorization(window.sessionStorage.getItem("token"));
+    }
 
-    storeCurrentUser(user, key){
-        this.setState({user:user, key:key, linksDisabled: false, authorized : true});
+    storeCurrentUser(user, token){
+        window.sessionStorage.setItem("token", token)
+        this.setState({user:user, linksDisabled: false, authorized : true});
     }
 
     removeCurrentUser(){
-        this.setState({user : null, key : null, linksDisabled : true, authorized : false});
+        this.setState({user : null, linksDisabled : true, authorized : false});
+        window.sessionStorage.removeItem("token");
         this.props.history.push(links.login);
     }
 
@@ -117,13 +118,15 @@ class App extends React.Component {
         xhr.onload = () => {
             let response = JSON.parse(xhr.response);
             if(xhr.status === 401){
-                this.setState({authorized : false});
+                this.setState({authorized : false, linksDisabled : true, user : null});
+                //alert("authorized false");
             }
             else if(xhr.status === 200){
-                this.setState({authorized : true});
+                this.setState({authorized : true, linksDisabled : false, user : response.username});
+                //alert("authorized true");
             }
             else{
-                this.setState({authorized : false});
+                this.setState({authorized : false, linksDisabled : true, user : null});
                 alert(response);
             }
         }
@@ -133,14 +136,11 @@ class App extends React.Component {
         return(
             <>
             <Navigation user={this.state.user} 
-                key={this.props.key} 
                 removeCurrentUser={this.removeCurrentUser} 
                 linksDisabled={this.state.linksDisabled}
             />
             <Router storeCurrentUser={this.storeCurrentUser} 
-                checkAuthorization={this.checkAuthorization} 
                 authorized={this.state.authorized}
-                key={this.state.key}
             />
             </>
         )
