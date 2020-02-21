@@ -14,10 +14,12 @@ class Explore extends React.Component {
     constructor(props){
         super(props);
         this.tableClickHandler = this.tableClickHandler.bind(this);
-
+        this.setReloadStocks = this.setReloadStocks.bind(this);
+        this.loadStocks = this.loadStocks.bind(this);
         this.state = {
             clicked_stock : createStock("MSFT", 250, "-0.05", "+2.2", "+4.3"),
             key : null,
+            reload_stocks : false,
         }
         
     }
@@ -29,13 +31,74 @@ class Explore extends React.Component {
         this.setState({clicked_stock : clicked_stock});
     }
 
+    setReloadStocks(yesorno){
+        this.setState({reload_stocks : yesorno});
+    }
+
+    componentDidMount(){
+        window.localStorage.setItem("loaded_stock", null); 
+    }
+
+    requestStock(ticker){
+        let request = new XMLHttpRequest();
+
+        request.open("GET", url + "scrape-stock-data/" + ticker + "/1d/1d/");
+        
+        request.setRequestHeader("Content-Type", "application/json");
+        request.setRequestHeader("Authorization", "JWT "+ window.sessionStorage.getItem("token"));
+        request.send();
+        
+        request.onload = function() {
+            
+            
+            if(request.status === 200){
+                let response = JSON.parse(request.response);
+                let loaded_stocks = JSON.parse(window.localStorage.getItem("loaded_stock"));
+
+                if(loaded_stocks === null){
+                    loaded_stocks = [];
+                }
+
+                let stock = response.payload;
+                //stock["ticker"] = response.ticker;
+                loaded_stocks.push(response.payload);
+                window.localStorage.setItem("loaded_stock", JSON.stringify(loaded_stocks));
+            }
+            else{
+                alert(request.response);
+                //this.setState({showSuccessAlert : true});
+            }
+        }.bind(this);
+    }
+
+    loadStocks(){
+        let industry_defaults = JSON.parse(window.sessionStorage.getItem("industry_defaults"));
+        if(industry_defaults && this.state.reload_stocks){
+            industry_defaults.map((ticker,index) => {
+                this.requestStock(ticker);
+            })
+            // badness hea
+            // it does load stuff into local storage
+            // but gets stuck in an infinite loop somehow cause
+            // the state wont get reset
+            alert("all mapped");
+            this.setState({reload_stocks : false});
+        }
+        
+    }
+
     render () {
+        if(this.state.reload_stocks){
+            this.loadStocks();
+        }
         return (
             <Container className="explore-container" fluid>
                 <Row className="explore-row" fluid>
-                    <Col id="stock-table-column" className="col-lg- stock-table-column"><StockTable clickHandler={this.tableClickHandler.bind(this)}/></Col>
+                    <Col id="stock-table-column" className="col-lg- stock-table-column">
+                        <StockTable reloadStocksHandler = {this.setReloadStocks} reloadStocks={this.state.reload_stocks} clickHandler={this.tableClickHandler.bind(this)}/>
+                    </Col>
                     <Col id="actions-column" className="stock-menu-container col-lg-3">
-                        <StocksMenu stock={this.state.clicked_stock} key={this.state.key}/>
+                        <StocksMenu reloadStocksHandler={this.setReloadStocks} stock={this.state.clicked_stock} key={this.state.key}/>
                     </Col>
                 </Row>
             </Container>
@@ -62,8 +125,14 @@ class StocksMenu extends React.Component {
             watch_success : false,
         }
 
+        this.industries = {
+            ["Technology"] : "technology",
+            ["Real Estate"] : "real_estate",
+        }
+
         this.sendWatchRequest = this.sendWatchRequest.bind(this);
         this.setShowSuccessFalse = this.setShowSuccessFalse.bind(this);
+        this.getIndustryDefaults = this.getIndustryDefaults.bind(this);
         this.alert_timeout = null;
     }
 
@@ -72,6 +141,30 @@ class StocksMenu extends React.Component {
         await this.setState({stock_on_watch_click : this.props.stock.symbol})
         this.sendWatchRequest();
         this.startAlertTimer();
+    }
+
+    getIndustryDefaults(event) {
+        let request = new XMLHttpRequest();
+
+        let industry = this.industries[event.target.value];
+
+        request.open("GET", url + "request-industry/" + industry + "/");
+        request.setRequestHeader("Content-Type", "application/json");
+        request.setRequestHeader("Authorization", "JWT "+ window.sessionStorage.getItem("token"));
+        request.send();
+
+        request.onload = function() {
+            let response = JSON.parse(request.response);
+
+            if(request.status === 200){
+                window.sessionStorage.setItem("industry_defaults", JSON.stringify(response.defaults));
+                //alert(JSON.parse(sessionStorage.getItem("industry_defaults")));
+                this.props.reloadStocksHandler(true);
+            }
+            else{
+                alert(request.response);
+            }
+        }.bind(this);
     }
 
 
@@ -156,6 +249,12 @@ class StocksMenu extends React.Component {
                             <Form.Control column placeholder="MSFT" />
                         </Col>
                     </Form.Row>
+                    <Form.Row>
+                        <Form.Control as="select" onChange={this.getIndustryDefaults} name="industry">
+                            <option>Technology</option>
+                            <option>Real Estate</option>
+                        </Form.Control>
+                    </Form.Row>
 
                 </div>
                 <Form.Row id="alert-row">
@@ -218,23 +317,31 @@ class StockTable extends React.Component {
     }
 
 
-    renderTableData() {
-        return this.state.more_stocks.map((stock, index) => {
-            const {symbol, price, day, month, year} = stock;
-            return (
-            <tr key={symbol} onClick={(e) => this.props.clickHandler(stock, e)}>
-                    {/* Make onclick() a function a() that updates the ui with symbol as a
-                    parameter. a will query for more information using symbol. */}
-                    <td>{symbol}</td>
-                    <td>{price}</td>
-                    <td>{day}</td>
-                    <td>{month}</td>
-                    <td>{year}</td>
-                </tr>
-            )
 
-        })
+    renderTableData() {
+        let loaded_stocks = JSON.parse(window.localStorage.getItem("loaded_stock"));
+
+        if(loaded_stocks){
+            return loaded_stocks.map((stock, index) => {
+                const {ticker, Open, High, Low, date} = stock[0];
+                return (
+                <tr key={ticker} onClick={(e) => this.props.clickHandler(stock, e)}>
+                        {/* Make onclick() a function a() that updates the ui with symbol as a
+                        parameter. a will query for more information using symbol. */}
+                        <td>{stock[0].ticker}</td>
+                        <td>{Open}</td>
+                        <td>{High}</td>
+                        <td>{Low}</td>
+                        <td>{date}</td>
+                    </tr>
+                )
+    
+            })
+        }
+        return null;
+        
     }
+
 
 
     render() {
