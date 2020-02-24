@@ -14,10 +14,10 @@ class Explore extends React.Component {
     constructor(props){
         super(props);
         this.tableClickHandler = this.tableClickHandler.bind(this);
-        this.setReloadStocks = this.setReloadStocks.bind(this);
+        
         this.loadStocks = this.loadStocks.bind(this);
-        this.setLoadStocks = this.setLoadStocks.bind(this);
-        this.setTableRefresh = this.setTableRefresh.bind(this);
+       
+       
         this.state = {
             clicked_stock : createStock("MSFT", 250, "-0.05", "+2.2", "+4.3"),
             key : null,
@@ -36,17 +36,6 @@ class Explore extends React.Component {
         this.setState({clicked_stock : clicked_stock});
     }
 
-    setReloadStocks(yesorno){
-        this.setState({reload_stocks : yesorno});
-    }
-
-    setLoadStocks(yesorno){
-        this.setState({loadStocks : yesorno})
-    }
-
-    setTableRefresh(yesorno){
-        this.setState({refresh_table : yesorno});
-    }
 
     componentDidMount(){
         window.localStorage.setItem("loaded_stock", null); 
@@ -66,17 +55,10 @@ class Explore extends React.Component {
             
             if(request.status === 200){
                 let response = JSON.parse(request.response);
-                //let loaded_stocks = JSON.parse(window.localStorage.getItem("loaded_stock"));
-
-                //if(loaded_stocks === null){
-                //    loaded_stocks = [];
-                //}
+                
                 response.payload[0].ticker = response.ticker;
-                //let stock = response.payload;
-                //stock["ticker"] = response.ticker;
-                //loaded_stocks.push(response.payload);
+                
                 this.setState({loaded_stocks : this.state.loaded_stocks.concat(response.payload)});
-                //window.localStorage.setItem("loaded_stock", JSON.stringify(loaded_stocks));
                 
             }
             else{
@@ -94,11 +76,7 @@ class Explore extends React.Component {
             industry_defaults.map((ticker,index) => {
                 this.requestStock(ticker);
             })
-            // badness hea
-            // it does load stuff into local storage
-            // but gets stuck in an infinite loop somehow cause
-            // the state wont get reset
-            //alert("all mapped");
+            
             this.setState({reload_stocks : false});
            
         }
@@ -150,6 +128,7 @@ class StocksMenu extends React.Component {
         this.sendWatchRequest = this.sendWatchRequest.bind(this);
         this.setShowSuccessFalse = this.setShowSuccessFalse.bind(this);
         this.getIndustryDefaults = this.getIndustryDefaults.bind(this);
+        this.onIndustryChange = this.onIndustryChange.bind(this);
         this.alert_timeout = null;
     }
 
@@ -160,10 +139,9 @@ class StocksMenu extends React.Component {
         this.startAlertTimer();
     }
 
-    getIndustryDefaults(event) {
+    getIndustryDefaults(industry) {
         let request = new XMLHttpRequest();
 
-        let industry = this.industries[event.target.value];
         window.sessionStorage.removeItem("industry_defaults");
         request.open("GET", url + "request-industry/" + industry + "/");
         request.setRequestHeader("Content-Type", "application/json");
@@ -187,6 +165,16 @@ class StocksMenu extends React.Component {
         
     }
 
+
+    onIndustryChange(event){
+        let industry = this.industries[event.target.value];
+        this.getIndustryDefaults(industry);
+    }
+
+
+    componentDidMount(){
+        this.getIndustryDefaults(this.industries["Technology"]);
+    }
 
     sendWatchRequest() {
         /* 
@@ -270,7 +258,7 @@ class StocksMenu extends React.Component {
                         </Col>
                     </Form.Row>
                     <Form.Row>
-                        <Form.Control as="select" onChange={this.getIndustryDefaults} name="industry">
+                        <Form.Control as="select" onChange={this.onIndustryChange} name="industry">
                             <option>Technology</option>
                             <option>Real Estate</option>
                         </Form.Control>
@@ -334,20 +322,6 @@ class StockTable extends React.Component {
     }
 
 
-    
-
-    //componentDidUpdate(prevProps, prevState){
-    //    if(this.props.stocks !== null && prevProps.stocks === null){
-    //        this.setState({stocks : JSON.parse(window.localStorage.getItem("loaded_stock"))});
-    //    }
-    //    else if(this.props.stocks === null){
-    //        return;
-    //    }
-     //   else if(this.props.stocks.length > prevProps.stocks.length){
-      //     this.setState({stocks : JSON.parse(window.localStorage.getItem("loaded_stock"))});
-       // }
-   // }
-
     renderTableData() {
         //let loaded_stocks = JSON.parse(window.localStorage.getItem("loaded_stock"));
 
@@ -357,7 +331,7 @@ class StockTable extends React.Component {
                 const {ticker, Open, High, Low, date} = stock;
                 
                 return (
-                <tr key={ticker} onClick={(e) => this.props.clickHandler(stock[0], e)}>
+                <tr key={ticker} onClick={(e) => this.props.clickHandler(stock, e)}>
                         {/* Make onclick() a function a() that updates the ui with symbol as a
                         parameter. a will query for more information using symbol. */}
                         <td>{ticker}</td>
