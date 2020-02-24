@@ -19,7 +19,7 @@ class Explore extends React.Component {
        
        
         this.state = {
-            clicked_stock : createStock("MSFT", 250, "-0.05", "+2.2", "+4.3"),
+            clicked_stock : null,
             key : null,
             reload_stocks : false,
             refresh_table : false,
@@ -31,8 +31,8 @@ class Explore extends React.Component {
 
     tableClickHandler(stock, e) {
         e.preventDefault();
-        const {ticker, open, high, low, date} = stock;
-        var clicked_stock = createStock(ticker, open, high, low, date);
+        const {ticker, Open, High, Low, date} = stock;
+        var clicked_stock = createStock(ticker, Open, High, Low, date);
         this.setState({clicked_stock : clicked_stock});
     }
 
@@ -233,11 +233,12 @@ class StocksMenu extends React.Component {
 
 
     render() {
+        let stock = this.props.stock;
         return (
             <Form>
                 <Form.Row>
-                    <Form.Group className="stock-menu-text" as={Col}>{this.props.stock.symbol}</Form.Group>
-                    <Form.Group as={Col}>{this.props.stock.price}</Form.Group>
+                    <Form.Group className="stock-menu-text" as={Col}>{stock ? stock.ticker : null}</Form.Group>
+                    <Form.Group as={Col}>{stock ? stock.high : null}</Form.Group>
                 </Form.Row>
 
                 <Form.Row id="watch-menu">
@@ -369,13 +370,13 @@ class StockTable extends React.Component {
 }
 
 
-function createStock(symbol, price, day, month, year) {
+function createStock(ticker, open, high, low, date) {
     return ({
-        symbol : symbol, 
-        price : price,
-        day : day,
-        month : month,
-        year : year
+        ticker : ticker, 
+        open : open,
+        high : high,
+        low : low,
+        date : date
     });
 }
 
