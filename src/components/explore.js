@@ -16,23 +16,36 @@ class Explore extends React.Component {
         this.tableClickHandler = this.tableClickHandler.bind(this);
         this.setReloadStocks = this.setReloadStocks.bind(this);
         this.loadStocks = this.loadStocks.bind(this);
+        this.setLoadStocks = this.setLoadStocks.bind(this);
+        this.setTableRefresh = this.setTableRefresh.bind(this);
         this.state = {
             clicked_stock : createStock("MSFT", 250, "-0.05", "+2.2", "+4.3"),
             key : null,
             reload_stocks : false,
+            refresh_table : false,
+            loadStocks : false,
+            loaded_stocks : [],
         }
         
     }
 
     tableClickHandler(stock, e) {
         e.preventDefault();
-        const {symbol, price, day, month, year} = stock;
-        var clicked_stock = createStock(symbol, price, day, month, year);
+        const {ticker, open, high, low, date} = stock;
+        var clicked_stock = createStock(ticker, open, high, low, date);
         this.setState({clicked_stock : clicked_stock});
     }
 
     setReloadStocks(yesorno){
         this.setState({reload_stocks : yesorno});
+    }
+
+    setLoadStocks(yesorno){
+        this.setState({loadStocks : yesorno})
+    }
+
+    setTableRefresh(yesorno){
+        this.setState({refresh_table : yesorno});
     }
 
     componentDidMount(){
@@ -53,27 +66,31 @@ class Explore extends React.Component {
             
             if(request.status === 200){
                 let response = JSON.parse(request.response);
-                let loaded_stocks = JSON.parse(window.localStorage.getItem("loaded_stock"));
+                //let loaded_stocks = JSON.parse(window.localStorage.getItem("loaded_stock"));
 
-                if(loaded_stocks === null){
-                    loaded_stocks = [];
-                }
-
-                let stock = response.payload;
+                //if(loaded_stocks === null){
+                //    loaded_stocks = [];
+                //}
+                response.payload[0].ticker = response.ticker;
+                //let stock = response.payload;
                 //stock["ticker"] = response.ticker;
-                loaded_stocks.push(response.payload);
-                window.localStorage.setItem("loaded_stock", JSON.stringify(loaded_stocks));
+                //loaded_stocks.push(response.payload);
+                this.setState({loaded_stocks : this.state.loaded_stocks.concat(response.payload)});
+                //window.localStorage.setItem("loaded_stock", JSON.stringify(loaded_stocks));
+                
             }
             else{
-                alert(request.response);
+                //alert("Bad: " + request.response);
                 //this.setState({showSuccessAlert : true});
             }
         }.bind(this);
     }
 
     loadStocks(){
+        window.localStorage.removeItem("loaded_stock");
+        this.setState({loaded_stocks : []});
         let industry_defaults = JSON.parse(window.sessionStorage.getItem("industry_defaults"));
-        if(industry_defaults && this.state.reload_stocks){
+        if(industry_defaults){
             industry_defaults.map((ticker,index) => {
                 this.requestStock(ticker);
             })
@@ -81,24 +98,24 @@ class Explore extends React.Component {
             // it does load stuff into local storage
             // but gets stuck in an infinite loop somehow cause
             // the state wont get reset
-            alert("all mapped");
+            //alert("all mapped");
             this.setState({reload_stocks : false});
+           
         }
         
     }
 
+
     render () {
-        if(this.state.reload_stocks){
-            this.loadStocks();
-        }
+        
         return (
             <Container className="explore-container" fluid>
                 <Row className="explore-row" fluid>
                     <Col id="stock-table-column" className="col-lg- stock-table-column">
-                        <StockTable reloadStocksHandler = {this.setReloadStocks} reloadStocks={this.state.reload_stocks} clickHandler={this.tableClickHandler.bind(this)}/>
+                        <StockTable stocks={this.state.loaded_stocks} tableRefresh = {this.setTableRefresh} clickHandler={this.tableClickHandler.bind(this)}/>
                     </Col>
                     <Col id="actions-column" className="stock-menu-container col-lg-3">
-                        <StocksMenu reloadStocksHandler={this.setReloadStocks} stock={this.state.clicked_stock} key={this.state.key}/>
+                        <StocksMenu loadStocksHandler={this.setLoadStocks} loadStocks={this.loadStocks} stock={this.state.clicked_stock} key={this.state.key}/>
                     </Col>
                 </Row>
             </Container>
@@ -147,7 +164,7 @@ class StocksMenu extends React.Component {
         let request = new XMLHttpRequest();
 
         let industry = this.industries[event.target.value];
-
+        window.sessionStorage.removeItem("industry_defaults");
         request.open("GET", url + "request-industry/" + industry + "/");
         request.setRequestHeader("Content-Type", "application/json");
         request.setRequestHeader("Authorization", "JWT "+ window.sessionStorage.getItem("token"));
@@ -159,12 +176,15 @@ class StocksMenu extends React.Component {
             if(request.status === 200){
                 window.sessionStorage.setItem("industry_defaults", JSON.stringify(response.defaults));
                 //alert(JSON.parse(sessionStorage.getItem("industry_defaults")));
-                this.props.reloadStocksHandler(true);
+                //this.props.loadStocksHandler(true);
+                this.props.loadStocks();
             }
             else{
                 alert(request.response);
             }
         }.bind(this);
+
+        
     }
 
 
@@ -298,37 +318,49 @@ class StockTable extends React.Component {
         super(props);
 
         this.state = {
-            stocks : [
-                createStock("MSFT", "87", 0.05, -2.21, 5.55),
-                createStock("TWTR", 9, 0.05, -2.21, 5.55),
-                createStock("AAPL", 47, 0.09, -9.23, 8.55)
-            ],
+            stocks : null,
             
             clicked_stock : null,
-
+            r : true,
             more_stocks : Array.from({length: 50}, e => createStock("MSFT", "87", 0.05, -2.21, 5.55)),
         }
-
+        
         const more_stocks = this.state.more_stocks.slice();
         for(let i = 0; i < more_stocks.length; i++){
             more_stocks[i].symbol = i;
         }
+        this.renderTableData = this.renderTableData.bind(this);
         this.setState({more_stocks : more_stocks});
     }
 
 
+    
+
+    //componentDidUpdate(prevProps, prevState){
+    //    if(this.props.stocks !== null && prevProps.stocks === null){
+    //        this.setState({stocks : JSON.parse(window.localStorage.getItem("loaded_stock"))});
+    //    }
+    //    else if(this.props.stocks === null){
+    //        return;
+    //    }
+     //   else if(this.props.stocks.length > prevProps.stocks.length){
+      //     this.setState({stocks : JSON.parse(window.localStorage.getItem("loaded_stock"))});
+       // }
+   // }
 
     renderTableData() {
-        let loaded_stocks = JSON.parse(window.localStorage.getItem("loaded_stock"));
+        //let loaded_stocks = JSON.parse(window.localStorage.getItem("loaded_stock"));
 
-        if(loaded_stocks){
-            return loaded_stocks.map((stock, index) => {
-                const {ticker, Open, High, Low, date} = stock[0];
+        if(this.props.stocks){
+            
+            return this.props.stocks.map((stock, index) => {
+                const {ticker, Open, High, Low, date} = stock;
+                
                 return (
-                <tr key={ticker} onClick={(e) => this.props.clickHandler(stock, e)}>
+                <tr key={ticker} onClick={(e) => this.props.clickHandler(stock[0], e)}>
                         {/* Make onclick() a function a() that updates the ui with symbol as a
                         parameter. a will query for more information using symbol. */}
-                        <td>{stock[0].ticker}</td>
+                        <td>{ticker}</td>
                         <td>{Open}</td>
                         <td>{High}</td>
                         <td>{Low}</td>
@@ -349,10 +381,10 @@ class StockTable extends React.Component {
             <Table id="stock-table" striped hover>
                 <thead id="table-head">
                     <th>Symbol</th>
-                    <th>Price</th>
-                    <th>Day</th>
-                    <th>Month</th>
-                    <th>Year</th>
+                    <th>Open</th>
+                    <th>High</th>
+                    <th>Low</th>
+                    <th>Date</th>
                 </thead>
                 <tbody>
                     {this.renderTableData()}
