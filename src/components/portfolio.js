@@ -19,6 +19,7 @@ class Portfolio extends React.Component {
         this.requestPortfolio = this.requestPortfolio.bind(this);
         this.loadStocks = this.loadStocks.bind(this);
         this.tableClickHandler = this.tableClickHandler.bind(this);
+        this.onUnwatchLoad = this.onUnwatchLoad.bind(this);
     }
 
     componentDidMount(){
@@ -82,6 +83,18 @@ class Portfolio extends React.Component {
         }.bind(this);
     }
 
+    onUnwatchLoad(ticker){
+        let loaded_stocks = this.state.loaded_stocks;
+
+        for(var i = 0; i < loaded_stocks.length; i++){
+            if(loaded_stocks[i].ticker === ticker){
+                loaded_stocks.splice(i, 1);
+                break;
+            }
+        }
+        this.setState({loaded_stocks : loaded_stocks});
+    }
+
     tableClickHandler(stock, e) {
         e.preventDefault();
         const {ticker, Open, High, Low, date} = stock;
@@ -104,7 +117,7 @@ class Portfolio extends React.Component {
                         <StockTable stocks={this.state.loaded_stocks} clickHandler={this.tableClickHandler.bind(this)}/>
                     </Col>
                     <Col id="actions-column" className="stock-menu-container col-lg-3">
-                        <PortfolioMenu loadStocksHandler={null} loadStocks={null} stock={this.state.clicked_stock}/>
+                        <PortfolioMenu loadStocksHandler={null} onUnwatchLoad={this.onUnwatchLoad} loadStocks={null} stock={this.state.clicked_stock}/>
                     </Col>
                 </Row>
             </Container>
@@ -192,8 +205,16 @@ class PortfolioMenu extends React.Component{
         request.send(JSON.stringify(body));
 
         request.onload = function() {
-            
-        }
+            if(request.status === 200){
+                let response = JSON.parse(request.response);
+                if(response.alert === "success"){
+                    this.props.onUnwatchLoad(response.symbol);
+                }
+                else{
+                    alert("Not watching that one");
+                }
+            }
+        }.bind(this);
     }
 
 

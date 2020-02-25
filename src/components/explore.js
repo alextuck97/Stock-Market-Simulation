@@ -134,7 +134,7 @@ class StocksMenu extends React.Component {
 
 
     async onWatchClick() {
-        await this.setState({stock_on_watch_click : this.props.stock.symbol})
+        await this.setState({stock_on_watch_click : this.props.stock.ticker})
         this.sendWatchRequest();
         this.startAlertTimer();
     }
@@ -184,7 +184,7 @@ class StocksMenu extends React.Component {
 
         request.open("POST", url + "watch/");
         const body = {
-            "symbol": this.props.stock.symbol,
+            "symbol": this.props.stock.ticker,
             //"quantity": this.state.quantity_selected
         }
         request.setRequestHeader("Content-Type", "application/json");
