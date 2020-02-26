@@ -3,8 +3,9 @@ import {Route} from 'react-router';
 import {BrowserRouter, Link} from 'react-router-dom';
 import {Container, Row, Col, Table, Form, Button} from "react-bootstrap";
 import App from "..";
+import Plot from "react-plotly.js";
 import {api_url} from "../router.js";
-
+import "./portfolio.css";
 
 class Portfolio extends React.Component {
     constructor(props){
@@ -51,7 +52,7 @@ class Portfolio extends React.Component {
         let industry_defaults = JSON.parse(window.sessionStorage.getItem("industry_defaults"));
         if(portfolio){
             portfolio.map((p,index) => {
-                this.requestStock(p.symbol);
+                //this.requestStock(p.symbol);
             })
         }
     }
@@ -107,17 +108,17 @@ class Portfolio extends React.Component {
                             };
         this.setState({clicked_stock : clicked_stock});
     }
-
+    
     render () {
         
         return (
             <Container className="explore-container" fluid>
                 <Row className="explore-row" fluid>
-                    <Col id="stock-table-column" className="col-lg- stock-table-column">
+                    <Col id="stock-table-column" className="col-lg-7 stock-table-column">
                         <StockTable stocks={this.state.loaded_stocks} clickHandler={this.tableClickHandler.bind(this)}/>
                     </Col>
-                    <Col id="actions-column" className="stock-menu-container col-lg-3">
-                        <PortfolioMenu loadStocksHandler={null} onUnwatchLoad={this.onUnwatchLoad} loadStocks={null} stock={this.state.clicked_stock}/>
+                    <Col id="actions-column" className="stock-menu-container col-lg-5">
+                        <PortfolioMenu stocks={this.state.loaded_stocks} loadStocksHandler={null} onUnwatchLoad={this.onUnwatchLoad} loadStocks={null} stock={this.state.clicked_stock}/>
                     </Col>
                 </Row>
             </Container>
@@ -191,6 +192,19 @@ class StockTable extends React.Component {
 
 
 class PortfolioMenu extends React.Component{
+    constructor(props){
+        super(props);
+
+        this.state = {
+            intervals : [],
+            prices : [],
+        }
+
+        this.populateOptions = this.populateOptions.bind(this);
+        this.makeQuery = this.makeQuery.bind(this);
+        this.onQueryChange = this.onQueryChange.bind(this);
+    }
+
 
     onUnwatchClick(){
         let request = new XMLHttpRequest();
@@ -217,6 +231,53 @@ class PortfolioMenu extends React.Component{
         }.bind(this);
     }
 
+    populateOptions(){
+        if(this.props.stocks){
+            return this.props.stocks.map((stock, index) =>{
+
+                return(
+                    <option>{stock.ticker}</option>
+                )
+            })
+        }
+        
+    }
+
+    onQueryChange(event){
+        let queries = {
+            "1 Day" : ["1d", "15m"],
+            "Month" : ["1mo", "1d"],
+            "Year" : ["1yr", "1wk"],
+            "5 Year" : ["5yr", "1mo"]
+        }
+        let query = queries[event.target.value];
+
+        this.makeQuery(query);
+    }
+
+    makeQuery(query){
+        let request = new XMLHttpRequest();
+        let args = this.props.stock.ticker + "/" + query[0] + "/" + query[1] + "/";
+        request.open("GET", api_url + "scrape-stock-data/" + args);
+        
+        request.setRequestHeader("Content-Type", "application/json");
+        request.setRequestHeader("Authorization", "JWT "+ window.sessionStorage.getItem("token"));
+        
+        request.send();
+        request.onload = function() {
+
+            if(request.status === 200){
+                let response = JSON.parse(request.response);
+                let prices = []; 
+                let intervals = [];
+                for(let i = 0; i < response.payload.length; i++){
+                    prices.push(response.payload[i].High);
+                    intervals.push(i);
+                }
+                this.setState({intervals : intervals, prices : prices});
+            }
+        }.bind(this);
+    }
 
     render(){
         const stock = this.props.stock;
@@ -226,9 +287,21 @@ class PortfolioMenu extends React.Component{
                     <Form.Group className="stock-menu-text" as={Col}>{stock ? stock.ticker : null}</Form.Group>
                     <Form.Group as={Col}>{stock ? stock.high : null}</Form.Group>
                 </Form.Row>
-
+                <Form.Row>
+                        
+                        <Form.Control className="offset-2 col-lg-6" as="select" onChange={this.onQueryChange} name="query">
+                            <option>1 Day</option>
+                            <option>Month</option>
+                            <option>Year</option>
+                            <option>5 Year</option>
+                        </Form.Control>
+                    </Form.Row>
+                <Form.Row>
+                    <StockPlot prices={this.state.prices} intervals={this.state.intervals}/>
+          
+                </Form.Row>
                 <Form.Row id="watch-menu">
-                    <Form.Group as={Col} className="col-lg-9">
+                    <Form.Group as={Col} className="offset-2 col-lg-6">
                         <Button variant="danger" id="un-watch-button" block onClick={this.onUnwatchClick.bind(this)}>Un-watch</Button>
                     </Form.Group>
                 </Form.Row>
@@ -236,5 +309,33 @@ class PortfolioMenu extends React.Component{
         )
     }
 }
+
+
+class StockPlot extends Plot{
+    constructor(props){
+        super(props);
+    }
+
+    render(){
+        return(
+            <Plot className="stock-plot"
+                data={[
+                    {
+                        x: this.props.intervals,
+                        y: this.props.prices,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        marker: {color: 'blue'},
+                    },
+                    {type: 'bar', x: [1, 2, 3], y: [2, 5, 3], marker:{color:"blue"}}, 
+                    ]}
+                    layout={ {width: 600, height: 400} }
+                    config={{displayModeBar: false}}
+            />
+        )
+    }
+
+}
+
 
 export default Portfolio;
