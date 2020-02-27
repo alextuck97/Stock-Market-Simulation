@@ -201,7 +201,6 @@ class PortfolioMenu extends React.Component{
             prices : [],
         }
 
-        this.populateOptions = this.populateOptions.bind(this);
         this.makeQuery = this.makeQuery.bind(this);
         this.onQueryChange = this.onQueryChange.bind(this);
     }
