@@ -8,6 +8,15 @@ import {api_url} from "../router.js";
 import "./portfolio.css";
 import {links} from "../router.js";
 
+const sessionExpired = "Session expired. Please refresh the page.";
+
+const queries = {
+    "1 Day" : ["1d", "15m"],
+    "Month" : ["1mo", "1d"],
+    "Year" : ["1y", "5d"],
+    "5 Year" : ["5y", "1mo"]
+}
+
 class Portfolio extends React.Component {
     constructor(props){
         super(props);
@@ -17,7 +26,8 @@ class Portfolio extends React.Component {
             loaded_stocks : [],
             clicked_stock : null,
             intervals : [[],[]],
-            prices : []
+            prices : [],
+            defaultQuery : "1 Day",
         }
 
         this.requestPortfolio = this.requestPortfolio.bind(this);
@@ -25,12 +35,16 @@ class Portfolio extends React.Component {
         this.tableClickHandler = this.tableClickHandler.bind(this);
         this.onUnwatchLoad = this.onUnwatchLoad.bind(this);
         this.makeQuery = this.makeQuery.bind(this);
+        this.setDefaultQueryRequest = this.setDefaultQueryRequest.bind(this);
     }
 
     componentDidMount(){
         this.requestPortfolio();
     }
     
+    setDefaultQueryRequest(request){
+        this.setState({defaultQuery : request})
+    }
 
     requestPortfolio(){
         let request = new XMLHttpRequest();
@@ -47,8 +61,8 @@ class Portfolio extends React.Component {
                 this.loadStocks(response.portfolio);
             }
             else if(request.status === 401){
-                this.props.history.push(links.login);
-                alert("Session expired");
+                //this.props.history.push(links.login);
+                alert(sessionExpired);
             }
             else{
                 alert(request.status);
@@ -86,8 +100,8 @@ class Portfolio extends React.Component {
                 
             }
             else if(request.status === 401){
-                this.props.history.push(links.login);
-                alert("Session expired");
+                //this.props.history.push(links.login);
+                alert(sessionExpired);
             }
             else{
                 //alert("Bad: " + request.response);
@@ -120,7 +134,7 @@ class Portfolio extends React.Component {
                                 date : date
                             };
         this.setState({clicked_stock : clicked_stock});
-        this.makeQuery(["1d","15m"], clicked_stock.ticker);
+        this.makeQuery(queries[this.state.defaultQuery], clicked_stock.ticker);
     }
     
 
@@ -150,8 +164,8 @@ class Portfolio extends React.Component {
                 this.setState({intervals : intervals, prices : prices});
             }
             else if(request.status === 401){
-                this.props.history.push(links.login);
-                alert("Session expired");
+                //this.props.history.push(links.login);
+                alert(sessionExpired);
             }
         }.bind(this);
     }
@@ -175,6 +189,7 @@ class Portfolio extends React.Component {
                                     intervals={this.state.intervals} 
                                     onUnwatchLoad={this.onUnwatchLoad} 
                                     stock={this.state.clicked_stock}
+                                    setDefaultQueryRequest={this.setDefaultQueryRequest}
                         />
                     </Col>
                 </Row>
@@ -299,24 +314,20 @@ class PortfolioMenu extends React.Component{
                 }
             }
             else if(request.status){
-                this.props.history.push(links.login);
-                alert("Session expired");
+                //this.props.history.push(links.login);
+                alert(sessionExpired);
             }
         }.bind(this);
     }
 
 
     onQueryChange(event){
-        let queries = {
-            "1 Day" : ["1d", "15m"],
-            "Month" : ["1mo", "1d"],
-            "Year" : ["1y", "5d"],
-            "5 Year" : ["5y", "1mo"]
-        }
+        
 
         if(this.props.stock){
             let query = queries[event.target.value];
             this.props.makeQuery(query, this.props.stock.ticker);
+            this.props.setDefaultQueryRequest(event.target.value);
         }
         
     }

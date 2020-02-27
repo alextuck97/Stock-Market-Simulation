@@ -4,6 +4,7 @@ import {links} from "../router.js";
 import './explore.css';
 
 const url = "http://127.0.0.1:8000/api/";
+const sessionExpired = "Session expired. Please refresh the page.";
 
 class Explore extends React.Component {
     /**
@@ -64,8 +65,8 @@ class Explore extends React.Component {
             }
             else if(request.status === 401) {
                 
-                this.props.history.push(links.login);
-                alert("Session expired");
+                //this.props.history.push(links.login);
+                alert(sessionExpired);
             }
         }.bind(this);
     }
@@ -165,8 +166,8 @@ class StocksMenu extends React.Component {
                 this.props.loadStocks();
             }
             else if(request.status === 401){
-                this.props.history.push(links.login);
-                alert("Session expired");
+                //this.props.history.push(links.login);
+                alert(sessionExpired);
             }
             else{
                 alert(request.response);
@@ -211,8 +212,8 @@ class StocksMenu extends React.Component {
                 this.setState({showSuccessAlert : true, watch_success : watch_success});
             }
             else if(request.status === 401){
-                this.props.history.push(links.login);
-                alert("Session expired");
+                //this.props.history.push(links.login);
+                alert(sessionExpired);
             }
             else{
                 alert(request.response);
