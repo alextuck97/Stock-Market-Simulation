@@ -52,7 +52,7 @@ class Portfolio extends React.Component {
         let industry_defaults = JSON.parse(window.sessionStorage.getItem("industry_defaults"));
         if(portfolio){
             portfolio.map((p,index) => {
-                //this.requestStock(p.symbol);
+                this.requestStock(p.symbol);
             })
         }
     }
@@ -93,7 +93,8 @@ class Portfolio extends React.Component {
                 break;
             }
         }
-        this.setState({loaded_stocks : loaded_stocks});
+        
+        this.setState({loaded_stocks : loaded_stocks, clicked_stock : null});
     }
 
     tableClickHandler(stock, e) {
@@ -210,6 +211,10 @@ class PortfolioMenu extends React.Component{
         let request = new XMLHttpRequest();
         request.open("DELETE", api_url + "watch/");
         
+        if(this.props.stock === null){
+            return;
+        }
+
         const body = {
             "symbol": this.props.stock.ticker,
             //"quantity": this.state.quantity_selected
@@ -231,28 +236,21 @@ class PortfolioMenu extends React.Component{
         }.bind(this);
     }
 
-    populateOptions(){
-        if(this.props.stocks){
-            return this.props.stocks.map((stock, index) =>{
-
-                return(
-                    <option>{stock.ticker}</option>
-                )
-            })
-        }
-        
-    }
+    
 
     onQueryChange(event){
         let queries = {
             "1 Day" : ["1d", "15m"],
             "Month" : ["1mo", "1d"],
-            "Year" : ["1yr", "1wk"],
-            "5 Year" : ["5yr", "1mo"]
+            "Year" : ["1y", "5d"],
+            "5 Year" : ["5y", "1mo"]
         }
-        let query = queries[event.target.value];
 
-        this.makeQuery(query);
+        if(this.props.stock){
+            let query = queries[event.target.value];
+            this.makeQuery(query);
+        }
+        
     }
 
     makeQuery(query){
@@ -271,8 +269,11 @@ class PortfolioMenu extends React.Component{
                 let prices = []; 
                 let intervals = [];
                 for(let i = 0; i < response.payload.length; i++){
-                    prices.push(response.payload[i].High);
-                    intervals.push(i);
+                    if(response.payload[i].High !== "NaN"){
+                        prices.push(response.payload[i].High);
+                        intervals.push(response.payload[i].date);
+                    }
+                    
                 }
                 this.setState({intervals : intervals, prices : prices});
             }
@@ -326,9 +327,7 @@ class StockPlot extends Plot{
                         type: 'scatter',
                         mode: 'lines+markers',
                         marker: {color: 'blue'},
-                    },
-                    {type: 'bar', x: [1, 2, 3], y: [2, 5, 3], marker:{color:"blue"}}, 
-                    ]}
+                    },]}
                     layout={ {width: 600, height: 400} }
                     config={{displayModeBar: false}}
             />

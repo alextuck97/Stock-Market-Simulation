@@ -123,6 +123,8 @@ class StocksMenu extends React.Component {
         this.industries = {
             ["Technology"] : "technology",
             ["Real Estate"] : "real_estate",
+            ["Communication"] : "communication",
+            ["Consumer"] : "consumer_cyclical"
         }
 
         this.sendWatchRequest = this.sendWatchRequest.bind(this);
@@ -134,9 +136,12 @@ class StocksMenu extends React.Component {
 
 
     async onWatchClick() {
-        await this.setState({stock_on_watch_click : this.props.stock.ticker})
-        this.sendWatchRequest();
-        this.startAlertTimer();
+        if(this.props.stock)
+        {
+            await this.setState({stock_on_watch_click : this.props.stock.ticker})
+            this.sendWatchRequest();
+            this.startAlertTimer();
+        }
     }
 
     getIndustryDefaults(industry) {
@@ -262,6 +267,8 @@ class StocksMenu extends React.Component {
                         <Form.Control as="select" onChange={this.onIndustryChange} name="industry">
                             <option>Technology</option>
                             <option>Real Estate</option>
+                            <option>Communication</option>
+                            <option>Consumer</option>
                         </Form.Control>
                     </Form.Row>
 

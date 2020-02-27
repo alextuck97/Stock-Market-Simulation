@@ -24,9 +24,6 @@ class AccountMenu extends React.Component {
         return(
             <Nav id="account-menu">
                 <NavDropdown alignRight title={this.state.user}>
-                    <NavDropdown.Item>Option1</NavDropdown.Item>
-                    <NavDropdown.Item>Option2</NavDropdown.Item>
-                    <NavDropdown.Divider />
                     <NavDropdown.Item onClick={this.props.removeCurrentUser}>Sign Out</NavDropdown.Item>
                 </NavDropdown>
                 <img src={this.state.imagesrc} width="40" height="40"/>
