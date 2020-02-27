@@ -15,12 +15,15 @@ class Portfolio extends React.Component {
             portfolio : [],
             loaded_stocks : [],
             clicked_stock : null,
+            intervals : [[],[]],
+            prices : []
         }
 
         this.requestPortfolio = this.requestPortfolio.bind(this);
         this.loadStocks = this.loadStocks.bind(this);
         this.tableClickHandler = this.tableClickHandler.bind(this);
         this.onUnwatchLoad = this.onUnwatchLoad.bind(this);
+        this.makeQuery = this.makeQuery.bind(this);
     }
 
     componentDidMount(){
@@ -108,8 +111,39 @@ class Portfolio extends React.Component {
                                 date : date
                             };
         this.setState({clicked_stock : clicked_stock});
+        this.makeQuery(["1d","15m"], clicked_stock.ticker);
     }
     
+
+    makeQuery(query, ticker){
+        let request = new XMLHttpRequest();
+        let args = ticker + "/" + query[0] + "/" + query[1] + "/";
+        request.open("GET", api_url + "scrape-stock-data/" + args);
+        
+        request.setRequestHeader("Content-Type", "application/json");
+        request.setRequestHeader("Authorization", "JWT "+ window.sessionStorage.getItem("token"));
+        
+        request.send();
+        request.onload = function() {
+
+            if(request.status === 200){
+                let response = JSON.parse(request.response);
+                let prices = []; 
+                let intervals = [[],[]];
+                for(let i = 0; i < response.payload.length; i++){
+                    if(response.payload[i].High !== "NaN"){
+                        prices.push(response.payload[i].High);
+                        intervals[0].push(response.payload[i].date);
+                        intervals[1].push(response.payload[i].time);
+                    }
+                    
+                }
+                this.setState({intervals : intervals, prices : prices});
+            }
+        }.bind(this);
+    }
+
+
     render () {
         
         return (
@@ -119,7 +153,13 @@ class Portfolio extends React.Component {
                         <StockTable stocks={this.state.loaded_stocks} clickHandler={this.tableClickHandler.bind(this)}/>
                     </Col>
                     <Col id="actions-column" className="stock-menu-container col-lg-5">
-                        <PortfolioMenu stocks={this.state.loaded_stocks} loadStocksHandler={null} onUnwatchLoad={this.onUnwatchLoad} loadStocks={null} stock={this.state.clicked_stock}/>
+                        <PortfolioMenu stocks={this.state.loaded_stocks} 
+                                    makeQuery={this.makeQuery} 
+                                    prices={this.state.prices} 
+                                    intervals={this.state.intervals} 
+                                    onUnwatchLoad={this.onUnwatchLoad} 
+                                    stock={this.state.clicked_stock}
+                        />
                     </Col>
                 </Row>
             </Container>
@@ -174,6 +214,7 @@ class StockTable extends React.Component {
     }
 
     render() {
+        const tabledata = this.renderTableData();
         return(
             <Table id="stock-table" striped hover>
                 <thead id="table-head">
@@ -184,7 +225,7 @@ class StockTable extends React.Component {
                     <th>Date</th>
                 </thead>
                 <tbody>
-                    {this.renderTableData()}
+                    {tabledata.length > 0 ? tabledata : <tr><td/><td/><td>Loading...</td><td/><td/></tr>}
                 </tbody>
             </Table>
         )
@@ -197,11 +238,10 @@ class PortfolioMenu extends React.Component{
         super(props);
 
         this.state = {
-            intervals : [],
-            prices : [],
+            
         }
 
-        this.makeQuery = this.makeQuery.bind(this);
+        
         this.onQueryChange = this.onQueryChange.bind(this);
     }
 
@@ -235,7 +275,11 @@ class PortfolioMenu extends React.Component{
         }.bind(this);
     }
 
-    
+    //shouldComponentUpdate(nextProps){
+    //    if(this.props.stocks.length === 0 && nextProps.stocks.length !== 0){
+    //       // this.makeQuery(["1d", "15m"], nextProps.stocks[0].ticker);
+    //    }
+    //}
 
     onQueryChange(event){
         let queries = {
@@ -247,44 +291,19 @@ class PortfolioMenu extends React.Component{
 
         if(this.props.stock){
             let query = queries[event.target.value];
-            this.makeQuery(query);
+            this.props.makeQuery(query, this.props.stock.ticker);
         }
         
     }
 
-    makeQuery(query){
-        let request = new XMLHttpRequest();
-        let args = this.props.stock.ticker + "/" + query[0] + "/" + query[1] + "/";
-        request.open("GET", api_url + "scrape-stock-data/" + args);
-        
-        request.setRequestHeader("Content-Type", "application/json");
-        request.setRequestHeader("Authorization", "JWT "+ window.sessionStorage.getItem("token"));
-        
-        request.send();
-        request.onload = function() {
-
-            if(request.status === 200){
-                let response = JSON.parse(request.response);
-                let prices = []; 
-                let intervals = [];
-                for(let i = 0; i < response.payload.length; i++){
-                    if(response.payload[i].High !== "NaN"){
-                        prices.push(response.payload[i].High);
-                        intervals.push(response.payload[i].date);
-                    }
-                    
-                }
-                this.setState({intervals : intervals, prices : prices});
-            }
-        }.bind(this);
-    }
+    
 
     render(){
         const stock = this.props.stock;
         return(
             <Form>
                 <Form.Row>
-                    <Form.Group className="stock-menu-text" as={Col}>{stock ? stock.ticker : null}</Form.Group>
+                    <Form.Group className="stock-menu-text offset-2" as={Col}>{stock ? stock.ticker : null}</Form.Group>
                     <Form.Group as={Col}>{stock ? stock.high : null}</Form.Group>
                 </Form.Row>
                 <Form.Row>
@@ -297,7 +316,7 @@ class PortfolioMenu extends React.Component{
                         </Form.Control>
                     </Form.Row>
                 <Form.Row>
-                    <StockPlot prices={this.state.prices} intervals={this.state.intervals}/>
+                    <StockPlot prices={this.props.prices} intervals={this.props.intervals}/>
           
                 </Form.Row>
                 <Form.Row id="watch-menu">
@@ -317,11 +336,21 @@ class StockPlot extends Plot{
     }
 
     render(){
+        if(this.props.intervals.length > 0){
+            var intervals;
+            if(this.props.intervals[0][0] === this.props.intervals[0][1]){
+                intervals = this.props.intervals[1];
+            }// By date or by time?
+            else{
+                intervals = this.props.intervals[0];
+            }
+        }
+        
         return(
             <Plot className="stock-plot"
                 data={[
                     {
-                        x: this.props.intervals,
+                        x: intervals,
                         y: this.props.prices,
                         type: 'scatter',
                         mode: 'lines+markers',

@@ -46,7 +46,7 @@ class Navigation extends React.Component {
         return(
             <>
                 <Navbar bg="dark" variant="dark" expand="lg">
-                    <NavLink className="navbar-brand" to="/">Website Title</NavLink>
+                    <NavLink className="navbar-brand" to="/">StockWatch</NavLink>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="mr-auto">

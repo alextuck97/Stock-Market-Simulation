@@ -359,6 +359,7 @@ class StockTable extends React.Component {
 
 
     render() {
+        let tabledata = this.renderTableData();
         return(
             <Table id="stock-table" striped hover>
                 <thead id="table-head">
@@ -369,7 +370,7 @@ class StockTable extends React.Component {
                     <th>Date</th>
                 </thead>
                 <tbody>
-                    {this.renderTableData()}
+                    {tabledata.length > 0 ? tabledata : <tr><td/><td/><td>Loading...</td><td/><td/></tr>}
                 </tbody>
             </Table>
         )
