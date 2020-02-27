@@ -26,8 +26,8 @@ class Router extends React.Component {
             
             <Switch>
                 
-                <PrivateRoute path={links.explore} component={Explore} authorized={this.props.authorized}/>
-                <PrivateRoute path={links.portfolio} component={Portfolio} authorized={this.props.authorized}/>
+                <PrivateRoute path={links.explore} props={this.props} component={Explore} user={this.props.user} authorized={this.props.authorized}/>
+                <PrivateRoute path={links.portfolio} props={this.props} component={Portfolio} user={this.props.user} authorized={this.props.authorized}/>
                 <Route 
                     path={links.signup} 
                     render={(props) => this.props.authorized ? 
@@ -57,9 +57,9 @@ const PublicOnlyRoute = ({component : Component, authorized : authorized, redire
 );
 
 
-const PrivateRoute = ({component: Component, authorized : authorized}) =>(
+const PrivateRoute = ({component: Component, authorized : authorized, user : user, props : props}) =>(
     <Route render={props => 
-            authorized ? (<Component {...props}/>) : (<Redirect to={{pathname : "/"}}/>)
+            authorized ? (<Component {...props} user={user}/>) : (<Redirect to={{pathname : "/"}}/>)
         }
     
     />

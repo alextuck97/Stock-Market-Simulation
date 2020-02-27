@@ -1,5 +1,6 @@
 import React from 'react';
 import {Table, Container, Row, Col, Button, Form, Alert} from 'react-bootstrap';
+import {links} from "../router.js";
 import './explore.css';
 
 const url = "http://127.0.0.1:8000/api/";
@@ -61,9 +62,10 @@ class Explore extends React.Component {
                 this.setState({loaded_stocks : this.state.loaded_stocks.concat(response.payload)});
                 
             }
-            else{
-                //alert("Bad: " + request.response);
-                //this.setState({showSuccessAlert : true});
+            else if(request.status === 401) {
+                
+                this.props.history.push(links.login);
+                alert("Session expired");
             }
         }.bind(this);
     }
@@ -162,6 +164,10 @@ class StocksMenu extends React.Component {
                 //this.props.loadStocksHandler(true);
                 this.props.loadStocks();
             }
+            else if(request.status === 401){
+                this.props.history.push(links.login);
+                alert("Session expired");
+            }
             else{
                 alert(request.response);
             }
@@ -204,6 +210,10 @@ class StocksMenu extends React.Component {
                 let watch_success = response.alert === "success"; 
                 this.setState({showSuccessAlert : true, watch_success : watch_success});
             }
+            else if(request.status === 401){
+                this.props.history.push(links.login);
+                alert("Session expired");
+            }
             else{
                 alert(request.response);
                 //this.setState({showSuccessAlert : true});
@@ -243,7 +253,7 @@ class StocksMenu extends React.Component {
             <Form>
                 <Form.Row>
                     <Form.Group className="stock-menu-text" as={Col}>{stock ? stock.ticker : null}</Form.Group>
-                    <Form.Group as={Col}>{stock ? stock.high : null}</Form.Group>
+                    <Form.Group as={Col}>{stock ? "High: " + stock.high : null}</Form.Group>
                 </Form.Row>
 
                 <Form.Row id="watch-menu">
@@ -257,14 +267,11 @@ class StocksMenu extends React.Component {
                 </Form.Row>
                 
                 <div id="query-menu">
-                    <Form.Row id="query-menu" className="query-menu">
-                        <Form.Label lg="3" column>Symbol:</Form.Label>
-                        <Col lg="4">
-                            <Form.Control column placeholder="MSFT" />
-                        </Col>
+                    <Form.Row>
+                        <Form.Label className="stock-menu-text">Industries</Form.Label>
                     </Form.Row>
                     <Form.Row>
-                        <Form.Control as="select" onChange={this.onIndustryChange} name="industry">
+                        <Form.Control className="col-lg-9" as="select" onChange={this.onIndustryChange} name="industry">
                             <option>Technology</option>
                             <option>Real Estate</option>
                             <option>Communication</option>

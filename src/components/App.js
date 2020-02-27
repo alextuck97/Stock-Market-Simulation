@@ -76,7 +76,7 @@ class App extends React.Component {
         super(props);
 
         this.state = {
-            user : "test-user",
+            user : null,
             authorized : false,
             linksDisabled : true,
         }
@@ -138,6 +138,7 @@ class App extends React.Component {
             />
             <Router storeCurrentUser={this.storeCurrentUser} 
                 authorized={this.state.authorized}
+                user={this.state.user}
             />
             </>
         )

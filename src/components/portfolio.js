@@ -6,6 +6,7 @@ import App from "..";
 import Plot from "react-plotly.js";
 import {api_url} from "../router.js";
 import "./portfolio.css";
+import {links} from "../router.js";
 
 class Portfolio extends React.Component {
     constructor(props){
@@ -45,6 +46,10 @@ class Portfolio extends React.Component {
                 this.setState({portfolio : response.portfolio});
                 this.loadStocks(response.portfolio);
             }
+            else if(request.status === 401){
+                this.props.history.push(links.login);
+                alert("Session expired");
+            }
             else{
                 alert(request.status);
             }
@@ -79,6 +84,10 @@ class Portfolio extends React.Component {
                 
                 this.setState({loaded_stocks : this.state.loaded_stocks.concat(response.payload)});
                 
+            }
+            else if(request.status === 401){
+                this.props.history.push(links.login);
+                alert("Session expired");
             }
             else{
                 //alert("Bad: " + request.response);
@@ -140,6 +149,10 @@ class Portfolio extends React.Component {
                 }
                 this.setState({intervals : intervals, prices : prices});
             }
+            else if(request.status === 401){
+                this.props.history.push(links.login);
+                alert("Session expired");
+            }
         }.bind(this);
     }
 
@@ -150,7 +163,10 @@ class Portfolio extends React.Component {
             <Container className="explore-container" fluid>
                 <Row className="explore-row" fluid>
                     <Col id="stock-table-column" className="col-lg-7 stock-table-column">
-                        <StockTable stocks={this.state.loaded_stocks} clickHandler={this.tableClickHandler.bind(this)}/>
+                        <StockTable stocks={this.state.loaded_stocks} 
+                                clickHandler={this.tableClickHandler.bind(this)} 
+                                user={this.props.user}
+                        />
                     </Col>
                     <Col id="actions-column" className="stock-menu-container col-lg-5">
                         <PortfolioMenu stocks={this.state.loaded_stocks} 
@@ -215,19 +231,29 @@ class StockTable extends React.Component {
 
     render() {
         const tabledata = this.renderTableData();
+        let user;
+        if(this.props.user){
+            user = this.props.user;
+        }
+        else{
+            user = null;
+        }
         return(
-            <Table id="stock-table" striped hover>
-                <thead id="table-head">
-                    <th>Symbol</th>
-                    <th>Open</th>
-                    <th>High</th>
-                    <th>Low</th>
-                    <th>Date</th>
-                </thead>
-                <tbody>
-                    {tabledata.length > 0 ? tabledata : <tr><td/><td/><td>Loading...</td><td/><td/></tr>}
-                </tbody>
-            </Table>
+            <>
+                <p>{user}'s Watch List</p>
+                <Table id="stock-table" striped hover>
+                    <thead id="table-head">
+                        <th>Symbol</th>
+                        <th>Open</th>
+                        <th>High</th>
+                        <th>Low</th>
+                        <th>Date</th>
+                    </thead>
+                    <tbody>
+                        {tabledata.length > 0 ? tabledata : <tr><td/><td/><td>Loading...</td><td/><td/></tr>}
+                    </tbody>
+                </Table>
+            </>
         )
     }
 }
@@ -272,14 +298,13 @@ class PortfolioMenu extends React.Component{
                     alert("Not watching that one");
                 }
             }
+            else if(request.status){
+                this.props.history.push(links.login);
+                alert("Session expired");
+            }
         }.bind(this);
     }
 
-    //shouldComponentUpdate(nextProps){
-    //    if(this.props.stocks.length === 0 && nextProps.stocks.length !== 0){
-    //       // this.makeQuery(["1d", "15m"], nextProps.stocks[0].ticker);
-    //    }
-    //}
 
     onQueryChange(event){
         let queries = {
@@ -303,8 +328,8 @@ class PortfolioMenu extends React.Component{
         return(
             <Form>
                 <Form.Row>
-                    <Form.Group className="stock-menu-text offset-2" as={Col}>{stock ? stock.ticker : null}</Form.Group>
-                    <Form.Group as={Col}>{stock ? stock.high : null}</Form.Group>
+                    <Form.Group className="stock-menu-text offset-2" as={Col}>{stock ? stock.ticker : "Click a symbol"}</Form.Group>
+                    <Form.Group as={Col}>{stock ? "High: " + stock.high : null}</Form.Group>
                 </Form.Row>
                 <Form.Row>
                         
@@ -330,11 +355,11 @@ class PortfolioMenu extends React.Component{
 }
 
 
-class StockPlot extends Plot{
+class StockPlot extends React.Component{
     constructor(props){
         super(props);
     }
-
+    
     render(){
         if(this.props.intervals.length > 0){
             var intervals;
