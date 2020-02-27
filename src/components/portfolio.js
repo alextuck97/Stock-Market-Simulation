@@ -75,6 +75,18 @@ class Portfolio extends React.Component {
         if(portfolio){
             portfolio.map((p,index) => {
                 this.requestStock(p.symbol);
+                if(index === 0){
+                    this.makeQuery([["1d"],"15m"], p.symbol);
+                    const {symbol, Open, High, Low, date} = p;
+                    var clicked_stock = {
+                                ticker : symbol, 
+                                open : Open,
+                                high : High,
+                                low : Low,
+                                date : date
+                            };
+                    this.setState({clicked_stock : clicked_stock});
+                }
             })
         }
     }
@@ -157,7 +169,9 @@ class Portfolio extends React.Component {
                     if(response.payload[i].High !== "NaN"){
                         prices.push(response.payload[i].High);
                         intervals[0].push(response.payload[i].date);
-                        intervals[1].push(response.payload[i].time);
+                        // parse the time string
+                        let time = response.payload[i].time.split("-")[0];
+                        intervals[1].push(time.substring(0, time.length - 3));
                     }
                     
                 }

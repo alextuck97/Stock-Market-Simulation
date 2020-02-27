@@ -77,7 +77,7 @@ class Explore extends React.Component {
         let industry_defaults = JSON.parse(window.sessionStorage.getItem("industry_defaults"));
         if(industry_defaults){
             industry_defaults.map((ticker,index) => {
-                //this.requestStock(ticker);
+                this.requestStock(ticker);
             })
             
             this.setState({reload_stocks : false});
