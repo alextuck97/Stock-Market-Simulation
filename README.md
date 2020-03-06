@@ -1,22 +1,22 @@
 ## Stock Market Sim
 
-This is the front end of a stock market app, supported by a REST api I wrote with Django [found here](https://github.com/alextuck97/Django_Market_App).
+This is the front end of a stock market app, supported by a REST api I wrote with Django ([found here](https://github.com/alextuck97/Django_Market_App)). This project was [deployed to Heroku](https://stock-vigilant.herokuapp.com/). 
 
 Users can look at lists of the latest stock prices queried from the NYSE. 
 
-![Stock Page](/images/main.png)
+![Stock Page](/images/main.PNG)
 
 Users can add stocks to their a list of favorited stocks. They can query additional history about stocks they favorited.
 
-![Portfolio Page](/images/portfolio.png)
+![Portfolio Page](/images/portfolio.PNG)
 
 New users will need to create an account.
 
-![Create User](/images/signup.png)
+![Create User](/images/signup.PNG)
 
 Returning users will need to sign in!
 
-![Sign in](/images/signin.png)
+![Sign in](/images/signin.PNG)
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
